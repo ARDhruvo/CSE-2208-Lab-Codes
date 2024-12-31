@@ -3,20 +3,6 @@ using namespace std;
 
 #define paragraph cout << endl
 
-/*
-For Acyclic
-5 9
-1 2 6
-1 4 7
-2 3 5
-2 4 8
-2 5 -4
-3 2 -2
-4 3 -3
-4 5 9
-5 1 2
- */
-
 int node_no, edge_no;       // Number of edges and nodes
 vector<int> Node_Vec[100];  // Main Graph
 vector<int> Node_Cost[100]; // Graph Weight/Cost
@@ -45,8 +31,8 @@ void insNode(int node)
 void pathPrint(int src, int dest, int k)
 {
     // Print
-    int cost = k - (2*d[dest]);
-    cout << "Playtime = " << cost << endl << "Path = ";
+    int playtime = k - (2*d[dest]); // Subtracting d[dest] (time spent on the journey) from K (total available time) gives total playtime
+    cout << "Playtime = " << playtime << endl << "Path = ";
     if (d[dest] == 255) // Inf means its not possible
     {
         cout << "Not possible" << endl;
@@ -97,7 +83,7 @@ void relax(int u)
     }
 }
 
-bool bellman(int src)
+bool bellman(int src) // Modified Bellman Ford as no negative weight is allowed
 {
     initializeSingleSource(src);
 
@@ -123,10 +109,10 @@ int main()
         cin >> nodeA >> nodeB >> cost;
         insNode(nodeA);
         insNode(nodeB);
-        Node_Vec[nodeA].push_back(nodeB); // To make it directed
-        Node_Vec[nodeB].push_back(nodeA); // To make it directed
+        Node_Vec[nodeA].push_back(nodeB);
+        Node_Vec[nodeB].push_back(nodeA); // To make it bidirected
         Node_Cost[nodeA].push_back(cost);
-        Node_Cost[nodeB].push_back(cost);
+        Node_Cost[nodeB].push_back(cost); // Pushing cost in both sides as it is bidirected
     }
     paragraph;
     cout << "Adjacency List:" << endl;
@@ -141,21 +127,23 @@ int main()
     }
     paragraph;
 
-    bellman(1);
+    bellman(1); // Runs modified bellman
 
-    int Q, A, K;
+    int Q, A, K; // Q = Number of queries, A = Node to visit, K = Total Assigned Time
+    cout << "Enter Number of Queries: ";
     cin >> Q;
+    cout << "Enter visiting house and assigned time: " << endl;
     for (int i = 0; i < Q; i++)
     {
         cin >> A >> K;
-        if((d[A]*2) >= K)
+        if((d[A]*2) >= K) // If travel time is twice or more of that of Total Assigned Time, Bishal will not play
         {
             cout << "Will not play" << endl;
         }
         else
         {
             pathPrint(1, A, K);
-            cout << endl;
+            paragraph;
         }
     }
 }
