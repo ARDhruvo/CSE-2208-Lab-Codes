@@ -2,24 +2,42 @@
 using namespace std;
 
 /*
-Input from slide
-5 9
-1 2 3
-1 3 8
-1 5 -4
-5 4 6
-4 1 2
-4 3 -5
-3 2 4
-2 5 7
-2 4 1
+Q: Given,
+D[2] =
+        1    2    3    4    5
+1       0    3    8    4    -4
+2       INF  0    INF  1    7
+3       INF  4    0    5    11
+4       2    5    -5   0    -2
+5       INF  INF  INF  6    0
+
+and Pi[2] =
+        1    2    3    4    5
+1       NIL  1    1    2    1
+2       NIL  NIL  NIL  2    2
+3       NIL  3    NIL  2    2
+4       4    1    4    NIL  1
+5       NIL  NIL  NIL  5    NI
+
+Using the above data, find D[3] and print all paths
+
+
+
+
+Output matrix
+        1    2    3    4    5
+1       0    3    8    4    -4
+2       INF  0    INF  1    7
+3       INF  4    0    5    11
+4       2    -1   -5   0    -2
+5       INF  INF  INF  6    0
  */
 
 #define paragraph cout << endl
 #define INF 255 // Using 255 as infinity for the cost matrix
-#define NIL 0   // Using 0 as nil for the predecessor matrix
+#define NIL -1   // Using -1 as nil for the predecessor matrix
 
-int node_no, edge_no;        // Number of edges and nodes
+int node_no = 6;       // Hard Coded to a 5 x 5 matrix
 vector<vector<int>> Dn, Pin; // For saving the final results globally to be accessed from anywhere
 
 void preMatrix(vector<vector<int>> W) // Printing Function for the Predecessor Matrix
@@ -71,7 +89,7 @@ void adjMatrix(vector<vector<int>> W) // Printing Function for the Cost Matrix
             if (W[i][j] != INF) // Checks if there is connection with j-th node
             {
                 cout << W[i][j];
-                if (W[i][j] >= 0) // Checks negative for spacing reasons
+                if ((W[i][j] >= 0) && (W[i][j] < 10)) // Checks negative for spacing reasons
                 {
                     cout << "    ";
                 }
@@ -112,15 +130,15 @@ void printPath(vector<vector<int>> Pi, int i, int j) // Recursive print path fro
     }
 }
 
-void floydWarshall(vector<vector<int>> W, vector<vector<int>> Pre) //,int src, int dest)
+void floydWarshall(vector<vector<int>> W, vector<vector<int>> Pre)
 {
-    // cout << "Floyd Started " << endl;
-    int n = node_no;                                           // n represents the number of iterations it will take to reach the final matrix
+    int n = 5;                                           // code doesn't work when n isn't 5
+    // Don't ask me why, idk why
     vector<vector<vector<int>>> D(n, vector<vector<int>>(n));  // D matrix for the cost updates
     vector<vector<vector<int>>> Pi(n, vector<vector<int>>(n)); // Pi matrix for the predecessor updates
-    D[0] = W;                                                  // Setting D0 as the first matrix; 0 because k starts from 1 and needs a previous state to compare with
-    Pi[0] = Pre;                                               // Setting Pi0 as the first matrix; 0 because k starts from 1 and needs a previous state to compare with
-    for (int k = 1; k < n; k++)
+    D[2] = W;                                                  // Given matrix was D2
+    Pi[2] = Pre;                                               // Given matrix was Pi2
+    for (int k = 3; k < n; k++) // Running to find D3
     {
         // Setting the k-th iteration as its past one so even if no changes in this iteration
         // the next one can keep using the previous one
@@ -130,99 +148,73 @@ void floydWarshall(vector<vector<int>> W, vector<vector<int>> Pre) //,int src, i
         {
             for (int j = 1; j < n; j++)
             {
-                // D[k][i][j] = min(D[k-1][i][j], (D[k-1][i][k] + D[k-1][k][j])); // For only Cost Adjacency Matrix
-                if (D[k - 1][i][j] > (D[k - 1][i][k] + D[k - 1][k][j]))
+                if (D[k][i][j] > (D[k][i][k] + D[k][k][j]))
                 {
                     // Updates the cost if the journey using k nodes makes it cheaper
-                    D[k][i][j] = (D[k - 1][i][k] + D[k - 1][k][j]); // Updates to the cost of using k nodes
-                    Pi[k][i][j] = Pi[k - 1][k][j];                  // Updates to the node of the new cost node's predecessor
+                    D[k][i][j] = (D[k][i][k] + D[k][k][j]); // Updates to the cost of using k nodes
+                    Pi[k][i][j] = Pi[k][k][j];                  // Updates to the node of the new cost node's predecessor
                 }
             }
         }
     }
     paragraph;
 
-    // For debugging purposes
-    /*
-    cout << "Floyd Completed ";
-    adjMatrix(D[n-1]);
-    cout << "Floyd Completed ";
-    preMatrix(Pi[n-1]);
-     */
+    // Required output
 
-    for (int i = 1; i < n; i++) // Prints ALL path
+    cout << "Floyd Completed ";
+    adjMatrix(D[3]);
+
+    for (int i = 1; i < node_no; i++) // Prints ALL path
     {
         cout << "From " << i << " to " << endl;
-        for (int j = 1; j < n; j++)
+        for (int j = 1; j < node_no; j++)
         {
             cout << j << ": ";
             printPath(Pi[n - 1], i, j);
-            cout << " Cost: " << D[n - 1][i][j] << endl;
+            if(D[n - 1][i][j]!= INF)
+            {
+                cout << " Cost: " << D[n - 1][i][j] << endl;
+            }
+
         }
         paragraph;
     }
 
     // For updating the matrices globally if they need to be accessed from elsewhere
-    Dn = D[n - 1];
-    Pin = Pi[n - 1];
-
-    // For single path only
-    /*
-    cout << "From " << src << " to " << dest << ": " << endl;
-    printPath(Pi[n-1], src, dest);
-    cout << " Cost: " << D[n-1][src][dest] << endl;
-    paragraph;
-    */
+    Dn = D[3];
+    Pin = Pi[3];
 }
 
 int main()
 {
-    cout << "Enter Number of Nodes and Edges: ";
-    cin >> node_no >> edge_no;
-    paragraph;
-    node_no++; // This is because we don't count 0 as node
+    vector<vector<int>> W(node_no, vector<int>(node_no, INF));   // Cost Matrix
+    vector<vector<int>> Pre(node_no, vector<int>(node_no, NIL)); // Predecessor Matrix
 
-    vector<vector<int>> W(node_no, vector<int>(node_no));   // Cost Matrix
-    vector<vector<int>> Pre(node_no, vector<int>(node_no)); // Predecessor Matrix
-
-    for (int i = 1; i < node_no; i++) // Initialized both matrices
+    // Given hardcoded state
+    W =
     {
-        for (int j = 1; j < node_no; j++)
-        {
-            W[i][j] = INF;   // Sets all cost at the start to infinity
-            Pre[i][j] = NIL; // Sets all predecessor at NIL
-            // This basically makes taking the inputs much smoother as they
-            // get replaced later anyways
-        }
-        W[i][i] = 0; // Sets diagonal to 0 as the cost for reaching a node from that node will always be 0 (unless specified)
-    }
+        {0, 0, 0, 0, 0, 0}, // W[0] will be here but it will not be accessible
+        {0, 0, 3, 8, 4, -4},
+        {0, INF, 0, INF, 1, 7},
+        {0, INF, 4, 0, 5, 11},
+        {0, 2, 5, -5, 0, -2},
+        {0, INF, INF, INF, 6, 0}
+    };
 
-    cout << "Enter Connections: " << endl;
-    for (int i = 1; i <= edge_no; i++)
+    Pre =
     {
-        int nodeA, nodeB, cost;
-        cin >> nodeA >> nodeB >> cost;
-        W[nodeA][nodeB] = cost;    // Sets the [i][j]-th element of the matrix to be its cost
-        Pre[nodeA][nodeB] = nodeA; // Sets the [i] as [j]'s predecessor
-    }
-    paragraph;
+        {NIL, NIL, NIL, NIL, NIL, NIL}, // Pre[0] will be here but it will not be accessible
+        {NIL, NIL, 1, 1, 2, 1},
+        {NIL, NIL, NIL, NIL, 2, 2},
+        {NIL, NIL, 3, NIL, 2, 2},
+        {NIL, 4, 1, 4, NIL, 1},
+        {NIL, NIL, NIL, NIL, 5, NIL}
+    };
 
     // Printing the input graph
     adjMatrix(W);
     preMatrix(Pre);
     paragraph;
 
-    // For finding out specific path and cost between any two nodes
-    /*
-    int src, dest;
-    cout << "Enter source and destination: ";
-    cin >> src >> dest;
-    */
-    floydWarshall(W, Pre); //, src, dest);
-
-    // For debugging purposes
-    /*
-    adjMatrix(Dn);
-    preMatrix(Pin);
-    */
+    floydWarshall(W, Pre);
 }

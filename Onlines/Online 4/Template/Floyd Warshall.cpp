@@ -17,7 +17,7 @@ Input from slide
 
 #define paragraph cout << endl
 #define INF 255 // Using 255 as infinity for the cost matrix
-#define NIL 0   // Using 0 as nil for the predecessor matrix
+#define NIL -1   // Using 0 as nil for the predecessor matrix
 
 int node_no, edge_no;        // Number of edges and nodes
 vector<vector<int>> Dn, Pin; // For saving the final results globally to be accessed from anywhere
@@ -71,7 +71,7 @@ void adjMatrix(vector<vector<int>> W) // Printing Function for the Cost Matrix
             if (W[i][j] != INF) // Checks if there is connection with j-th node
             {
                 cout << W[i][j];
-                if (W[i][j] >= 0) // Checks negative for spacing reasons
+                if ((W[i][j] >= 0) && (W[i][j] < 10)) // Checks negative for spacing reasons
                 {
                     cout << "    ";
                 }
@@ -126,16 +126,16 @@ void floydWarshall(vector<vector<int>> W, vector<vector<int>> Pre) //,int src, i
         // the next one can keep using the previous one
         D[k] = D[k - 1];
         Pi[k] = Pi[k - 1];
-        for (int i = 1; i < n; i++)
+        for (int i = 1; i < n; i++) // For accessing Column
         {
-            for (int j = 1; j < n; j++)
+            for (int j = 1; j < n; j++) // For accessing Row
             {
                 // D[k][i][j] = min(D[k-1][i][j], (D[k-1][i][k] + D[k-1][k][j])); // For only Cost Adjacency Matrix
-                if (D[k - 1][i][j] > (D[k - 1][i][k] + D[k - 1][k][j]))
+                if (D[k][i][j] > (D[k][i][k] + D[k][k][j]))
                 {
                     // Updates the cost if the journey using k nodes makes it cheaper
-                    D[k][i][j] = (D[k - 1][i][k] + D[k - 1][k][j]); // Updates to the cost of using k nodes
-                    Pi[k][i][j] = Pi[k - 1][k][j];                  // Updates to the node of the new cost node's predecessor
+                    D[k][i][j] = (D[k][i][k] + D[k][k][j]); // Updates to the cost of using k nodes
+                    Pi[k][i][j] = Pi[k][k][j];                  // Updates to the node of the new cost node's predecessor
                 }
             }
         }
@@ -182,18 +182,11 @@ int main()
     paragraph;
     node_no++; // This is because we don't count 0 as node
 
-    vector<vector<int>> W(node_no, vector<int>(node_no));   // Cost Matrix
-    vector<vector<int>> Pre(node_no, vector<int>(node_no)); // Predecessor Matrix
+    vector<vector<int>> W(node_no, vector<int>(node_no, INF));   // Cost Matrix
+    vector<vector<int>> Pre(node_no, vector<int>(node_no, NIL)); // Predecessor Matrix
 
     for (int i = 1; i < node_no; i++) // Initialized both matrices
     {
-        for (int j = 1; j < node_no; j++)
-        {
-            W[i][j] = INF;   // Sets all cost at the start to infinity
-            Pre[i][j] = NIL; // Sets all predecessor at NIL
-            // This basically makes taking the inputs much smoother as they
-            // get replaced later anyways
-        }
         W[i][i] = 0; // Sets diagonal to 0 as the cost for reaching a node from that node will always be 0 (unless specified)
     }
 
