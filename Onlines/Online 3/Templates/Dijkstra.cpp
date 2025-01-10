@@ -1,6 +1,45 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+/*
+For Acyclic
+5 10
+1 2 10
+1 3 5
+2 4 1
+2 3 2
+3 2 3
+3 4 9
+3 5 2
+4 5 4
+5 4 6
+5 1 7
+
+1 2 5
+1 3 3
+2 3 2
+2 4 6
+3 4 7
+3 5 4
+3 6 2
+4 5 -1
+4 6 1
+5 6 -2
+
+5 10
+5 1 7
+5 4 6
+2 4 1
+4 5 4
+3 2 3
+3 4 9
+3 5 2
+2 3 2
+1 3 5
+1 2 10
+
+ */
+
 #define paragraph cout << endl
 #define INF 255
 #define NIL -1
