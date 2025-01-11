@@ -192,6 +192,10 @@ int main()
 
     vector<vector<int>> Cost(node_no, vector<int>(node_no, INF)); // The cost matrix is initialized with INF; Assumed at start that all nodes are disconnected
     // This is done for disconnected graphs
+    for (int i = 1; i < node_no; i++)
+    {
+        Cost[i][i] = 0; // The diagonals of the cost matrix is 0
+    }
     vector<vector<int>> Adj(node_no); // The Adjacent Matrix's i-th vector contains all adjacent nodes of i
 
     cout << "Enter connections and cost: " << endl;
