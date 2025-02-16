@@ -3,6 +3,10 @@ using namespace std;
 
 #define paragraph cout << endl
 #define INF INT_MAX
+#define vertex pair<int, pair<int, vector<vector<int>>>>
+#define minheap vertex, vector<vertex>, greater<vertex>
+
+vector<int> path;
 
 void AdjMatrix(set<int> Nodes, vector<vector<int>> W)
 {
@@ -33,6 +37,23 @@ void AdjMatrix(set<int> Nodes, vector<vector<int>> W)
     }
 }
 
+void tsp(int src, set<int> Nodes, vector<vector<int>> Cost)
+{
+    path.push_back(src);
+    priority_queue<minheap> Q;
+
+    /*
+     * Reduction
+     * for each node v in Nodes:
+     * * r = Cost[src][v]
+     * * set [src] row Cost to INF
+     * * set [v] column Cost to INF
+     * * set [src][v] and [v][src] to INF
+     * * Cost = r + Reduction of current matrix
+     * * Q.push -> {Cost: {v : Current Matrix}}
+     */
+}
+
 int main()
 {
     int node_no, edge_no;
@@ -43,7 +64,7 @@ int main()
     paragraph;
 
     set<int> Nodes;
-    vector<vector<int>> Cost(node_no);
+    vector<vector<int>> Cost(node_no, vector<int>(node_no, INF));
     int nodeA, nodeB, cost;
     cout << "Enter Connections and Weight:" << endl;
     for (int i = 0; i < edge_no; i++)
@@ -67,4 +88,12 @@ int main()
     paragraph;
 
     AdjMatrix(Nodes, Cost);
+    paragraph;
+
+    int src;
+    cout << "Enter source for TSP: ";
+    cin >> src;
+    Nodes.erase(src);
+    tsp(src, Nodes, Cost);
+    paragraph;
 }
