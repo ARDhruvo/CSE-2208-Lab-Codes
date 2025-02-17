@@ -1,6 +1,43 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+/*
+5 20
+1 2 20
+1 3 30
+1 4 10
+1 5 11
+2 1 15
+2 3 16
+2 4 4
+2 5 2
+3 1 3
+3 2 5
+3 4 2
+3 5 4
+4 1 19
+4 2 6
+4 3 18
+4 5 3
+5 1 16
+5 2 4
+5 3 7
+5 4 16
+
+5 11
+1 2 9
+2 3 5
+3 2 3
+3 4 4
+4 3 7
+4 2 6
+1 4 8
+4 5 12
+5 4 10
+5 1 1
+2 5 2
+ */
+
 #define paragraph cout << endl
 #define INF INT_MAX
 #define vertex pair<int, pair<int, vector<vector<int>>>>
@@ -91,6 +128,7 @@ int reductionCost(vector<vector<int>> &Cost)
             cost += red;
         }
     }
+    return cost;
 }
 
 void recurtsp(int src, set<int> Nodes, vector<vector<int>> Cost)
@@ -107,14 +145,20 @@ void recurtsp(int src, set<int> Nodes, vector<vector<int>> Cost)
 
     if (!Nodes.empty())
     {
+        // cout << "Current Source: " << src << ": " << finalCost << endl;
         Nodes.erase(src);
         path.push_back(src);
+        if (Nodes.empty())
+        {
+            return;
+        }
         priority_queue<minheap> Q;
         vector<vector<int>> Dummy(Nodes.size(), vector<int>(node_no, 0));
         int dummIndex = 0;
 
         for (int v : Nodes)
         {
+            // cout << "Exploring: " << src << " " << v << endl;
             int r = Cost[src][v];
             if (r == INF)
             {
@@ -133,8 +177,8 @@ void recurtsp(int src, set<int> Nodes, vector<vector<int>> Cost)
         }
 
         Dummy = Q.top().second.second;
-        finalCost = Q.top().second.first;
-        int nextSrc = Q.top().first;
+        finalCost = Q.top().first;
+        int nextSrc = Q.top().second.first;
         Q.pop();
 
         recurtsp(nextSrc, Nodes, Dummy);
@@ -149,8 +193,17 @@ void recurtsp(int src, set<int> Nodes, vector<vector<int>> Cost)
 
 void tsp(int src, set<int> Nodes, vector<vector<int>> Cost)
 {
+    cout << "Path: ";
     finalCost = reductionCost(Cost);
     recurtsp(src, Nodes, Cost);
+    for (int i : path)
+    {
+        cout << i << " -> ";
+    }
+    cout << src;
+    paragraph;
+
+    cout << "Cost: " << finalCost << endl;
 }
 
 int main()
@@ -190,6 +243,8 @@ int main()
     int src;
     cout << "Enter source for TSP: ";
     cin >> src;
+    paragraph;
+
     tsp(src, Nodes, Cost);
     paragraph;
 }
