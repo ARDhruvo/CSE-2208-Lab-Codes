@@ -24,7 +24,7 @@ void printItems() // For indexing items to understand later
 
 void knapsack(int W, int n)
 {
-    vector<vector<int>> V(W + 1, vector<int>(n + 1, 0)); // Matrix with the highest benefit
+    vector<vector<int>> V(n + 1, vector<int>(W + 1, 0)); // Matrix with the highest benefit
 
     // V is already filled with 0
     /*
