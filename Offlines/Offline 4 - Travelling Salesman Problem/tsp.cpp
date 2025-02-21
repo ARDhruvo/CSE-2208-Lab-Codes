@@ -26,7 +26,7 @@ using namespace std;
 
 5 11
 1 2 9
-2 3 5
+2 3 4
 3 2 3
 3 4 4
 4 3 7
@@ -36,6 +36,27 @@ using namespace std;
 5 4 10
 5 1 1
 2 5 2
+
+5 11
+1 2 9
+2 3 6
+3 2 3
+3 4 4
+4 3 8
+4 2 6
+1 4 8
+4 5 13
+5 4 10
+5 1 1
+2 5 4
+
+4 6
+1 2 1
+4 1 4
+2 3 3
+2 4 2
+4 3 3
+3 4 3
  */
 
 #define paragraph cout << endl
@@ -46,7 +67,9 @@ using namespace std;
 int node_no, edge_no;
 
 vector<int> path;
-int finalCost;
+vector<bool> inPath;
+int finalCost, origSrc;
+bool deadEnd = false, unreachable = false;
 
 void AdjMatrix(set<int> Nodes, vector<vector<int>> W)
 {
@@ -75,6 +98,16 @@ void AdjMatrix(set<int> Nodes, vector<vector<int>> W)
         }
         paragraph;
     }
+}
+
+void pathPrint()
+{
+    paragraph;
+    for (int i : path)
+    {
+        cout << i << " -> ";
+    }
+    paragraph;
 }
 
 int reductionCost(vector<vector<int>> &Cost)
@@ -148,17 +181,35 @@ void recurtsp(int src, set<int> Nodes, vector<vector<int>> Cost)
         // cout << "Current Source: " << src << ": " << finalCost << endl;
         Nodes.erase(src);
         path.push_back(src);
+        inPath[src] = true;
         if (Nodes.empty())
         {
+            if (Cost[src][origSrc] != INF)
+            {
+                finalCost += Cost[src][origSrc];
+            }
+            else
+            {
+                cout << "Unreachable from " << src << endl;
+                cout << "Explored path: ";
+                for (int i : path)
+                {
+                    cout << i << " ";
+                }
+                paragraph;
+                unreachable = true;
+                Nodes.insert(src);
+                inPath[src] = false;
+                paragraph;
+            }
             return;
         }
         priority_queue<minheap> Q;
         vector<vector<int>> Dummy(Nodes.size(), vector<int>(node_no, 0));
-        int dummIndex = 0;
 
         for (int v : Nodes)
         {
-            // cout << "Exploring: " << src << " " << v << endl;
+            cout << "Exploring: " << src << " " << v << endl;
             int r = Cost[src][v];
             if (r == INF)
             {
@@ -173,7 +224,18 @@ void recurtsp(int src, set<int> Nodes, vector<vector<int>> Cost)
             Dummy[src][v] = INF;
             Dummy[v][src] = INF;
             int cost = finalCost + reductionCost(Dummy) + r;
+            pathPrint();
+            AdjMatrix(Nodes, Dummy);
+            paragraph;
             Q.push({cost, {v, Dummy}});
+        }
+
+        if (Q.empty())
+        {
+            cout << "Third Check" << endl;
+            deadEnd = true;
+            // path.pop_back();
+            return;
         }
 
         Dummy = Q.top().second.second;
@@ -182,6 +244,68 @@ void recurtsp(int src, set<int> Nodes, vector<vector<int>> Cost)
         Q.pop();
 
         recurtsp(nextSrc, Nodes, Dummy);
+
+        // CHECKS
+
+        if (unreachable)
+        {
+            if (Nodes.size() < 2)
+            {
+                path.pop_back();
+                return;
+            }
+
+            Dummy = Q.top().second.second;
+            finalCost = Q.top().first;
+            nextSrc = Q.top().second.first;
+            Q.pop();
+
+            unreachable = false;
+
+            recurtsp(nextSrc, Nodes, Dummy);
+        }
+
+        Nodes.insert(src);
+
+        if (deadEnd)
+        {
+            if (Q.empty())
+            {
+                return;
+            }
+            else
+            {
+                nextSrc = Q.top().second.first;
+                Dummy = Q.top().second.second;
+                finalCost = Q.top().first;
+                Q.pop();
+                while ((Nodes.find(nextSrc) == Nodes.end()))
+                {
+                    if (Q.empty())
+                    {
+                        return;
+                    }
+                    nextSrc = Q.top().second.first;
+                    Dummy = Q.top().second.second;
+                    finalCost = Q.top().first;
+                    Q.pop();
+                }
+                deadEnd = false;
+                path.pop_back();
+                recurtsp(nextSrc, Nodes, Dummy);
+            }
+        }
+
+        while (finalCost > Q.top().first && !Q.empty())
+        {
+            cout << "Are we reaching here by any chance?" << endl;
+            Dummy = Q.top().second.second;
+            finalCost = Q.top().first;
+            int nextSrc = Q.top().second.first;
+            Q.pop();
+
+            recurtsp(nextSrc, Nodes, Dummy);
+        }
 
         /*
          * Compare finalCost with the new Q.top()
@@ -193,13 +317,11 @@ void recurtsp(int src, set<int> Nodes, vector<vector<int>> Cost)
 
 void tsp(int src, set<int> Nodes, vector<vector<int>> Cost)
 {
-    cout << "Path: ";
+    origSrc = src;
     finalCost = reductionCost(Cost);
     recurtsp(src, Nodes, Cost);
-    for (int i : path)
-    {
-        cout << i << " -> ";
-    }
+    cout << "Path: ";
+    pathPrint();
     cout << src;
     paragraph;
 
@@ -215,6 +337,7 @@ int main()
 
     set<int> Nodes;
     vector<vector<int>> Cost(node_no, vector<int>(node_no, INF));
+    inPath.resize(node_no, false);
     int nodeA, nodeB, cost;
     cout << "Enter Connections and Weight:" << endl;
     for (int i = 0; i < edge_no; i++)
