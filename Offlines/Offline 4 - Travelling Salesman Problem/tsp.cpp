@@ -1,64 +1,6 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-/*
-5 20
-1 2 20
-1 3 30
-1 4 10
-1 5 11
-2 1 15
-2 3 16
-2 4 4
-2 5 2
-3 1 3
-3 2 5
-3 4 2
-3 5 4
-4 1 19
-4 2 6
-4 3 18
-4 5 3
-5 1 16
-5 2 4
-5 3 7
-5 4 16
-
-5 11
-1 2 9
-2 3 4
-3 2 3
-3 4 4
-4 3 7
-4 2 6
-1 4 8
-4 5 12
-5 4 10
-5 1 1
-2 5 2
-
-5 11
-1 2 9
-2 3 6
-3 2 3
-3 4 4
-4 3 8
-4 2 6
-1 4 8
-4 5 13
-5 4 10
-5 1 1
-2 5 4
-
-4 6
-1 2 1
-4 1 4
-2 3 3
-2 4 2
-4 3 3
-3 4 3
- */
-
 #define paragraph cout << endl
 #define INF INT_MAX
 #define vertex pair<int, pair<int, vector<vector<int>>>>
@@ -67,9 +9,8 @@ using namespace std;
 int node_no, edge_no;
 
 vector<int> path;
-vector<bool> inPath;
 int finalCost, origSrc;
-bool deadEnd = false, unreachable = false;
+bool deadEnd = false;
 
 void AdjMatrix(set<int> Nodes, vector<vector<int>> W)
 {
@@ -98,16 +39,6 @@ void AdjMatrix(set<int> Nodes, vector<vector<int>> W)
         }
         paragraph;
     }
-}
-
-void pathPrint()
-{
-    paragraph;
-    for (int i : path)
-    {
-        cout << i << " -> ";
-    }
-    paragraph;
 }
 
 int reductionCost(vector<vector<int>> &Cost)
@@ -161,11 +92,14 @@ int reductionCost(vector<vector<int>> &Cost)
             cost += red;
         }
     }
+
     return cost;
 }
 
 void recurtsp(int src, set<int> Nodes, vector<vector<int>> Cost)
 {
+    path.push_back(src);
+    vector<int> currPath = path;
     /*
      * for each node v in Nodes:
      * * r = Cost[src][v]
@@ -176,156 +110,191 @@ void recurtsp(int src, set<int> Nodes, vector<vector<int>> Cost)
      * * Q.push -> {Cost: {v : Current Matrix}}
      */
 
-    if (!Nodes.empty())
+    // For checking if the currently exploring node is a deadend
+    deadEnd = true;
+    for (int i : Nodes)
     {
-        // cout << "Current Source: " << src << ": " << finalCost << endl;
-        Nodes.erase(src);
-        path.push_back(src);
-        inPath[src] = true;
-        if (Nodes.empty())
+        if (Cost[src][i] != INF)
         {
-            if (Cost[src][origSrc] != INF)
-            {
-                finalCost += Cost[src][origSrc];
-            }
-            else
-            {
-                cout << "Unreachable from " << src << endl;
-                cout << "Explored path: ";
-                for (int i : path)
-                {
-                    cout << i << " ";
-                }
-                paragraph;
-                unreachable = true;
-                Nodes.insert(src);
-                inPath[src] = false;
-                paragraph;
-            }
+            deadEnd = false;
+            break;
+        }
+    }
+    if (deadEnd)
+    {
+        if (Nodes.size() > 1)
+        {
+            path.pop_back();
             return;
         }
-        priority_queue<minheap> Q;
-        vector<vector<int>> Dummy(Nodes.size(), vector<int>(node_no, 0));
-
-        for (int v : Nodes)
+        if (Cost[src][origSrc] == INF)
         {
-            cout << "Exploring: " << src << " " << v << endl;
-            int r = Cost[src][v];
-            if (r == INF)
-            {
-                continue;
-            }
-            Dummy = Cost;
-            for (int i = 0; i < node_no; i++)
-            {
-                Dummy[src][i] = INF;
-                Dummy[i][v] = INF;
-            }
-            Dummy[src][v] = INF;
-            Dummy[v][src] = INF;
-            int cost = finalCost + reductionCost(Dummy) + r;
-            pathPrint();
-            AdjMatrix(Nodes, Dummy);
-            paragraph;
-            Q.push({cost, {v, Dummy}});
+            path.pop_back();
+            return;
         }
-
-        if (Q.empty())
+        else
         {
-            cout << "Third Check" << endl;
+            deadEnd = false;
+        }
+    }
+
+    Nodes.erase(src);
+    if (Nodes.empty())
+    {
+        finalCost += Cost[src][origSrc];
+        return;
+    }
+    priority_queue<minheap> Q;
+    vector<vector<int>> Dummy(Nodes.size(), vector<int>(node_no, 0));
+
+    for (int v : Nodes)
+    {
+        int r = Cost[src][v];
+        if (r == INF)
+        {
+            continue;
+        }
+        Dummy = Cost;
+        for (int i = 0; i < node_no; i++)
+        {
+            Dummy[src][i] = INF;
+            Dummy[i][v] = INF;
+        }
+        Dummy[src][v] = INF;
+        Dummy[v][src] = INF;
+        int cost = finalCost + reductionCost(Dummy) + r;
+        Q.push({cost, {v, Dummy}});
+    }
+
+    Dummy = Q.top().second.second;
+    finalCost = Q.top().first;
+    int nextSrc = Q.top().second.first;
+    Q.pop();
+
+    recurtsp(nextSrc, Nodes, Dummy);
+
+    while (deadEnd)
+    {
+        deadEnd = false;
+        if (!Q.empty())
+        {
+            Dummy = Q.top().second.second;
+            finalCost = Q.top().first;
+            nextSrc = Q.top().second.first;
+            Q.pop();
+
+            recurtsp(nextSrc, Nodes, Dummy);
+        }
+        else
+        {
             deadEnd = true;
-            // path.pop_back();
+            path.pop_back();
             return;
         }
+    }
 
-        Dummy = Q.top().second.second;
-        finalCost = Q.top().first;
-        int nextSrc = Q.top().second.first;
-        Q.pop();
+    /*
+     * Compare finalCost with the new Q.top()
+     * if finalCost is less: win
+     * else: I have no idea lol
+     */
 
-        recurtsp(nextSrc, Nodes, Dummy);
-
-        // CHECKS
-
-        if (unreachable)
+    while (!Q.empty())
+    {
+        if (Q.top().first >= finalCost)
         {
-            if (Nodes.size() < 2)
-            {
-                path.pop_back();
-                return;
-            }
+            return;
+        }
+        else
+        {
+            int origCost = finalCost;
+            vector<int> origPath = path;
+            path = currPath;
 
             Dummy = Q.top().second.second;
             finalCost = Q.top().first;
             nextSrc = Q.top().second.first;
             Q.pop();
 
-            unreachable = false;
-
             recurtsp(nextSrc, Nodes, Dummy);
-        }
 
-        Nodes.insert(src);
-
-        if (deadEnd)
-        {
-            if (Q.empty())
+            if (finalCost >= origCost)
             {
-                return;
-            }
-            else
-            {
-                nextSrc = Q.top().second.first;
-                Dummy = Q.top().second.second;
-                finalCost = Q.top().first;
-                Q.pop();
-                while ((Nodes.find(nextSrc) == Nodes.end()))
-                {
-                    if (Q.empty())
-                    {
-                        return;
-                    }
-                    nextSrc = Q.top().second.first;
-                    Dummy = Q.top().second.second;
-                    finalCost = Q.top().first;
-                    Q.pop();
-                }
-                deadEnd = false;
-                path.pop_back();
-                recurtsp(nextSrc, Nodes, Dummy);
+                finalCost = origCost;
+                path = origPath;
             }
         }
+    }
 
-        while (finalCost > Q.top().first && !Q.empty())
-        {
-            cout << "Are we reaching here by any chance?" << endl;
-            Dummy = Q.top().second.second;
-            finalCost = Q.top().first;
-            int nextSrc = Q.top().second.first;
-            Q.pop();
-
-            recurtsp(nextSrc, Nodes, Dummy);
-        }
-
-        /*
-         * Compare finalCost with the new Q.top()
-         * if finalCost is less: win
-         * else: I have no idea lol
-         */
+    if (Q.empty()) // Nothing to do with the current node
+    {
+        return;
     }
 }
 
 void tsp(int src, set<int> Nodes, vector<vector<int>> Cost)
 {
     origSrc = src;
+
     finalCost = reductionCost(Cost);
     recurtsp(src, Nodes, Cost);
+
+    // For checking if every node can be visited
+    if (Nodes.size() != path.size())
+    {
+        cout << "All nodes cannot be visited" << endl
+             << "TSP is not possible";
+        return;
+    }
+
     cout << "Path: ";
-    pathPrint();
+    for (int i : path)
+    {
+        cout << i << " -> ";
+    }
     cout << src;
     paragraph;
 
     cout << "Cost: " << finalCost << endl;
+}
+
+bool impossible(int src, set<int> Nodes, vector<vector<int>> Cost)
+{
+    // For checking if graph is disconnected
+    if ((node_no - 1) > edge_no)
+    {
+        cout << "Disconnected Graph" << endl;
+        return true;
+    }
+
+    // For checking if source is leaf
+    for (int i : Nodes)
+    {
+        if (Cost[src][i] != INF)
+        {
+            break;
+        }
+        if ((i == *Nodes.end()) && (Cost[src][i] == INF))
+        {
+            cout << "Nowhere to go from source" << endl;
+            return true;
+        }
+    }
+
+    // For checking if its possible to return back
+    for (int i : Nodes)
+    {
+        if (Cost[i][src] != INF)
+        {
+            break;
+        }
+        if ((i == *Nodes.end()) && (Cost[i][src] == INF))
+        {
+            cout << "No connection back to source" << endl;
+            return true;
+        }
+    }
+    return false;
 }
 
 int main()
@@ -337,7 +306,6 @@ int main()
 
     set<int> Nodes;
     vector<vector<int>> Cost(node_no, vector<int>(node_no, INF));
-    inPath.resize(node_no, false);
     int nodeA, nodeB, cost;
     cout << "Enter Connections and Weight:" << endl;
     for (int i = 0; i < edge_no; i++)
@@ -353,10 +321,8 @@ int main()
             continue;
         }
         Cost[nodeA][nodeB] = cost; // ij-th element of the matrix = cost of visiting j from i
-        // W[nodeB][nodeA] = cost; // For undirected graph
         Nodes.insert(nodeA);
         Nodes.insert(nodeB); // To keep track of total nodes
-        // Edges.push(make_pair(-cost, make_pair(nodeA, nodeB))); // Negative cost with vertices of the edge
     }
     paragraph;
 
@@ -368,6 +334,13 @@ int main()
     cin >> src;
     paragraph;
 
-    tsp(src, Nodes, Cost);
-    paragraph;
+    if (impossible(src, Nodes, Cost))
+    {
+        cout << "TSP is not possible" << endl;
+    }
+    else
+    {
+        tsp(src, Nodes, Cost);
+        paragraph;
+    }
 }
